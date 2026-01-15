@@ -1,0 +1,47 @@
+### Hae kaikki blogit
+GET http://localhost:3003/api/blogs
+
+### Lisää uusi blogi
+POST http://localhost:3003/api/blogs
+Content-Type: application/json
+
+{
+  "title": "Testiblogi",
+  "author": "Testaaja",
+  "url": "http://example.com/testi",
+  "likes": 5
+}
+
+### Luo uusi käyttäjä
+POST http://localhost:3003/api/users
+Content-Type: application/json
+
+{
+  "username": "matti123",
+  "name": "Matti Meikäläinen",
+  "password": "salasana"
+}
+
+### Hae kaikki käyttäjät
+GET http://localhost:3003/api/users
+
+### Kirjaudu sisään
+POST http://localhost:3003/api/login
+Content-Type: application/json
+
+{
+  "username": "jani123",
+  "password": "salasana"
+}
+
+### Lisää blogi tokenin kanssa
+POST http://localhost:3003/api/blogs
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImphbmkxMjMiLCJpZCI6IjY4ODFmMWI3YjAxOWE3MWM5M2YzZmQxNiIsImlhdCI6MTc1MzQyOTY1Mn0.xMPoTFR4eRWxdClvza8cNf6zL51p5IhJgEbHA18UgzE
+Content-Type: application/json
+
+{
+  "title": "Tokenilla lisätty blogi",
+  "author": "Kirjautunut käyttäjä",
+  "url": "http://example.com/blogi",
+  "likes": 10
+}
