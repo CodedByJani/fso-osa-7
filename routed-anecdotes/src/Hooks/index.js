@@ -7,18 +7,21 @@ export const useField = (type) => {
     setValue(event.target.value)
   }
 
-  // ✅ uusi reset-funktio
-  const reset = () => setValue('')
+  const reset = () => {
+    setValue('')
+  }
 
+  // ✅ reset EI ole mukana inputPropsissa
   return {
-    type,
-    value,
-    onChange,
-    reset // ✅ palautetaan hookista
+    inputProps: {
+      type,
+      value,
+      onChange
+    },
+    reset
   }
 }
 
-// Mahdollisuus lisätä muita hookkeja myöhemmin
 export const useAnotherHook = () => {
   // ...
 }
