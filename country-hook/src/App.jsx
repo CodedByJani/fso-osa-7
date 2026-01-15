@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import axios from 'axios'
 
+// Hook syötekentälle
 const useField = (type) => {
   const [value, setValue] = useState('')
 
@@ -15,37 +16,61 @@ const useField = (type) => {
   }
 }
 
+// Custom hook: hakee maan tiedot
 const useCountry = (name) => {
   const [country, setCountry] = useState(null)
 
-  useEffect(() => {})
+  useEffect(() => {
+    if (!name) return  // jos syöte tyhjä, älä hae
+
+    const fetchCountry = async () => {
+      try {
+        const response = await axios.get(
+          `https://studies.cs.helsinki.fi/restcountries/api/name/${name}`
+        )
+        setCountry({
+          found: true,
+          data: {
+            name: response.data.name.common,
+            capital: response.data.capital[0],
+            population: response.data.population,
+            flag: response.data.flags.png
+          }
+        })
+      } catch (error) {
+        setCountry({ found: false })
+      }
+    }
+
+    fetchCountry()
+  }, [name]) // suoritetaan aina, kun name muuttuu
 
   return country
 }
 
+// Näyttää maan tiedot
 const Country = ({ country }) => {
-  if (!country) {
-    return null
-  }
+  if (!country) return null
 
   if (!country.found) {
-    return (
-      <div>
-        not found...
-      </div>
-    )
+    return <div>not found...</div>
   }
 
   return (
     <div>
-      <h3>{country.data.name} </h3>
-      <div>capital {country.data.capital} </div>
-      <div>population {country.data.population}</div> 
-      <img src={country.data.flag} height='100' alt={`flag of ${country.data.name}`}/>  
+      <h3>{country.data.name}</h3>
+      <div>capital {country.data.capital}</div>
+      <div>population {country.data.population}</div>
+      <img
+        src={country.data.flag}
+        height='100'
+        alt={`flag of ${country.data.name}`}
+      />
     </div>
   )
 }
 
+// Sovellus
 const App = () => {
   const nameInput = useField('text')
   const [name, setName] = useState('')
