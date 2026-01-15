@@ -1,15 +1,15 @@
-const jwt = require('jsonwebtoken')
+const jwt = require('jsonwebtoken');
 
 const tokenExtractor = (request, response, next) => {
-  const authorization = request.get('authorization')
+  const authorization = request.get('authorization');
 
   if (authorization && authorization.toLowerCase().startsWith('bearer ')) {
-    request.token = authorization.substring(7)
+    request.token = authorization.substring(7);
   } else {
-    request.token = null
+    request.token = null;
   }
 
-  next()
-}
+  next();
+};
 
-module.exports = tokenExtractor
+module.exports = tokenExtractor;
