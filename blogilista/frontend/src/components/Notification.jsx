@@ -1,9 +1,11 @@
-import PropTypes from 'prop-types'
+import { useNotification } from '../context/NotificationContext.jsx';
 
-const Notification = ({ message }) => {
-  if (message === null) return null
+const Notification = () => {
+  const [notification] = useNotification();
 
-  const isError = message === 'wrong credentials'
+  if (!notification) return null;
+
+  const isError = notification === 'wrong credentials';
 
   const style = {
     color: isError ? 'red' : 'white',
@@ -11,17 +13,13 @@ const Notification = ({ message }) => {
     padding: 10,
     marginBottom: 10,
     borderRadius: 5,
-  }
+  };
 
   return (
     <div className={isError ? 'error' : undefined} style={style}>
-      {message}
+      {notification}
     </div>
-  )
-}
+  );
+};
 
-Notification.propTypes = {
-  message: PropTypes.string
-}
-
-export default Notification
+export default Notification;
