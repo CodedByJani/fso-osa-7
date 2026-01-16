@@ -1,24 +1,45 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useContext } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import Blog from './components/Blog';
 import BlogForm from './components/BlogForm';
 import Notification from './components/Notification';
 import blogService from './services/blogs';
 import loginService from './services/login';
 import Togglable from './components/Togglable';
-import { useNotification } from './context/NotificationContext.jsx';
+import { NotificationContext } from './context/NotificationContext.jsx';
 
 const App = () => {
-  const [blogs, setBlogs] = useState([]);
   const [user, setUser] = useState(null);
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+
   const blogFormRef = useRef();
+  const { notification, dispatch } = useContext(NotificationContext);
+  const queryClient = useQueryClient();
 
-  const [notification, dispatch] = useNotification(); // contextin käyttö
+  // Haetaan blogit
+  const { data: blogs = [] } = useQuery({
+    queryKey: ['blogs'],
+    queryFn: blogService.getAll,
+  });
 
-  useEffect(() => {
-    blogService.getAll().then((blogs) => setBlogs(blogs));
-  }, []);
+  // Mutation uuden blogin luomiseen
+  const createBlogMutation = useMutation({
+    mutationFn: blogService.create,
+    onSuccess: (newBlog) => {
+      queryClient.invalidateQueries({ queryKey: ['blogs'] });
+      dispatch({
+        type: 'SET',
+        payload: `A new blog '${newBlog.title}' by ${newBlog.author} added`,
+      });
+      setTimeout(() => dispatch({ type: 'CLEAR' }), 5000);
+      blogFormRef.current.toggleVisibility();
+    },
+    onError: () => {
+      dispatch({ type: 'SET', payload: 'Blog creation failed' });
+      setTimeout(() => dispatch({ type: 'CLEAR' }), 5000);
+    },
+  });
 
   useEffect(() => {
     const loggedUserJSON = window.localStorage.getItem('loggedBlogUser');
@@ -28,11 +49,6 @@ const App = () => {
       blogService.setToken(user.token);
     }
   }, []);
-
-  const setNotificationMessage = (msg) => {
-    dispatch({ type: 'SET', payload: msg });
-    setTimeout(() => dispatch({ type: 'CLEAR' }), 5000);
-  };
 
   const handleLogin = async (event) => {
     event.preventDefault();
@@ -44,7 +60,8 @@ const App = () => {
       setUsername('');
       setPassword('');
     } catch (exception) {
-      setNotificationMessage('wrong credentials');
+      dispatch({ type: 'SET', payload: 'Wrong credentials' });
+      setTimeout(() => dispatch({ type: 'CLEAR' }), 5000);
     }
   };
 
@@ -55,36 +72,14 @@ const App = () => {
   };
 
   const addBlog = async (blogObject) => {
-    try {
-      const returnedBlog = await blogService.create(blogObject);
-      setBlogs(blogs.concat(returnedBlog));
-      setNotificationMessage(
-        `a new blog '${returnedBlog.title}' by ${returnedBlog.author} added`,
-      );
-      blogFormRef.current.toggleVisibility();
-    } catch (error) {
-      setNotificationMessage('blog creation failed');
-    }
+    createBlogMutation.mutate(blogObject);
   };
 
-  const removeBlog = async (blog) => {
-    const ok = window.confirm(`Remove blog '${blog.title}' by ${blog.author}?`);
-    if (!ok) return;
-
-    try {
-      await blogService.remove(blog.id);
-      setBlogs(blogs.filter((b) => b.id !== blog.id));
-      setNotificationMessage(`Deleted '${blog.title}'`);
-    } catch (error) {
-      setNotificationMessage('Failed to delete blog');
-    }
-  };
-
-  if (user === null) {
+  if (!user) {
     return (
       <div>
         <h2>Log in to application</h2>
-        <Notification />
+        <Notification message={notification} />
         <form onSubmit={handleLogin}>
           <div>
             <label htmlFor="username">username</label>
@@ -117,7 +112,7 @@ const App = () => {
   return (
     <div>
       <h2>blogs</h2>
-      <Notification />
+      <Notification message={notification} />
       <p>
         {user.name} logged in <button onClick={handleLogout}>logout</button>
       </p>
@@ -133,12 +128,29 @@ const App = () => {
             key={blog.id}
             blog={blog}
             user={user}
-            updateBlog={(updatedBlog) =>
-              setBlogs(
-                blogs.map((b) => (b.id !== updatedBlog.id ? b : updatedBlog)),
+            updateBlog={(updatedBlog) => {
+              queryClient.setQueryData(['blogs'], (old) =>
+                old.map((b) => (b.id !== updatedBlog.id ? b : updatedBlog)),
+              );
+            }}
+            removeBlog={(removedBlog) => {
+              if (
+                !window.confirm(
+                  `Remove blog '${removedBlog.title}' by ${removedBlog.author}?`,
+                )
               )
-            }
-            removeBlog={removeBlog}
+                return;
+              blogService.remove(removedBlog.id).then(() => {
+                queryClient.setQueryData(['blogs'], (old) =>
+                  old.filter((b) => b.id !== removedBlog.id),
+                );
+                dispatch({
+                  type: 'SET',
+                  payload: `Deleted '${removedBlog.title}'`,
+                });
+                setTimeout(() => dispatch({ type: 'CLEAR' }), 5000);
+              });
+            }}
           />
         ))}
     </div>

@@ -1,10 +1,11 @@
 import { useNotification } from '../context/NotificationContext.jsx';
 
 const Notification = () => {
-  const [notification] = useNotification();
+  const { notification } = useNotification();
 
   if (!notification) return null;
 
+  // Esimerkkinä oletetaan, että virheilmoitus on "wrong credentials"
   const isError = notification === 'wrong credentials';
 
   const style = {

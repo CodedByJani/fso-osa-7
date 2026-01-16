@@ -1,7 +1,9 @@
 import { createContext, useReducer, useContext } from 'react';
 
-const NotificationContext = createContext();
+// Alkuperäinen tila
+const initialState = null;
 
+// Reducer notifikaatioille
 const notificationReducer = (state, action) => {
   switch (action.type) {
     case 'SET':
@@ -13,11 +15,18 @@ const notificationReducer = (state, action) => {
   }
 };
 
+// Luodaan context
+export const NotificationContext = createContext();
+
+// Provider-komponentti
 export const NotificationProvider = ({ children }) => {
-  const [notification, dispatch] = useReducer(notificationReducer, null);
+  const [notification, dispatch] = useReducer(
+    notificationReducer,
+    initialState,
+  );
 
   return (
-    <NotificationContext.Provider value={[notification, dispatch]}>
+    <NotificationContext.Provider value={{ notification, dispatch }}>
       {children}
     </NotificationContext.Provider>
   );
