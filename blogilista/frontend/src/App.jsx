@@ -1,46 +1,28 @@
-import { useState, useEffect, useRef, useContext } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+// frontend/src/App.jsx
+import { useState, useEffect, useRef } from 'react';
 import Blog from './components/Blog';
 import BlogForm from './components/BlogForm';
-import Notification from './components/Notification';
+import Togglable from './components/Togglable';
 import blogService from './services/blogs';
 import loginService from './services/login';
-import Togglable from './components/Togglable';
-import { NotificationContext } from './context/NotificationContext.jsx';
+import { useNotification } from './context/NotificationContext';
+import Notification from './components/Notification';
 
 const App = () => {
+  const [blogs, setBlogs] = useState([]);
   const [user, setUser] = useState(null);
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
 
   const blogFormRef = useRef();
-  const { notification, dispatch } = useContext(NotificationContext);
-  const queryClient = useQueryClient();
+  const { notify, notification } = useNotification();
 
-  // Haetaan blogit
-  const { data: blogs = [] } = useQuery({
-    queryKey: ['blogs'],
-    queryFn: blogService.getAll,
-  });
+  // Hae blogit backendistä
+  useEffect(() => {
+    blogService.getAll().then((blogs) => setBlogs(blogs));
+  }, []);
 
-  // Mutation uuden blogin luomiseen
-  const createBlogMutation = useMutation({
-    mutationFn: blogService.create,
-    onSuccess: (newBlog) => {
-      queryClient.invalidateQueries({ queryKey: ['blogs'] });
-      dispatch({
-        type: 'SET',
-        payload: `A new blog '${newBlog.title}' by ${newBlog.author} added`,
-      });
-      setTimeout(() => dispatch({ type: 'CLEAR' }), 5000);
-      blogFormRef.current.toggleVisibility();
-    },
-    onError: () => {
-      dispatch({ type: 'SET', payload: 'Blog creation failed' });
-      setTimeout(() => dispatch({ type: 'CLEAR' }), 5000);
-    },
-  });
-
+  // Tarkista, onko käyttäjä kirjautuneena
   useEffect(() => {
     const loggedUserJSON = window.localStorage.getItem('loggedBlogUser');
     if (loggedUserJSON) {
@@ -50,6 +32,7 @@ const App = () => {
     }
   }, []);
 
+  // Kirjautuminen
   const handleLogin = async (event) => {
     event.preventDefault();
     try {
@@ -60,21 +43,64 @@ const App = () => {
       setUsername('');
       setPassword('');
     } catch (exception) {
-      dispatch({ type: 'SET', payload: 'Wrong credentials' });
-      setTimeout(() => dispatch({ type: 'CLEAR' }), 5000);
+      notify('wrong credentials', 5000);
     }
   };
 
+  // Kirjautuminen ulos
   const handleLogout = () => {
     setUser(null);
     window.localStorage.removeItem('loggedBlogUser');
     blogService.setToken(null);
   };
 
+  // Lisää uusi blogi
   const addBlog = async (blogObject) => {
-    createBlogMutation.mutate(blogObject);
+    try {
+      const returnedBlog = await blogService.create(blogObject);
+      setBlogs(blogs.concat(returnedBlog));
+      notify(
+        `a new blog '${returnedBlog.title}' by ${returnedBlog.author} added`,
+        5000,
+      );
+      blogFormRef.current.toggleVisibility();
+    } catch (error) {
+      notify('blog creation failed', 5000);
+    }
   };
 
+  // Poista blogi
+  const removeBlog = async (blog) => {
+    const ok = window.confirm(`Remove blog '${blog.title}' by ${blog.author}?`);
+    if (!ok) return;
+
+    try {
+      await blogService.remove(blog.id);
+      setBlogs(blogs.filter((b) => b.id !== blog.id));
+      notify(`Deleted '${blog.title}'`, 5000);
+    } catch (error) {
+      notify('Failed to delete blog', 5000);
+    }
+  };
+
+  // Päivitä blogin likes
+  const updateBlogLikes = async (blog) => {
+    const updatedBlog = {
+      ...blog,
+      likes: blog.likes + 1,
+      user: blog.user.id || blog.user,
+    };
+    try {
+      const returnedBlog = await blogService.update(blog.id, updatedBlog);
+      setBlogs(blogs.map((b) => (b.id !== returnedBlog.id ? b : returnedBlog)));
+      return returnedBlog; // <-- palauta blogi handleLike:lle
+    } catch (error) {
+      notify('Failed to like blog');
+      throw error; // <-- niin handleLike tietää että virhe tapahtui
+    }
+  };
+
+  // Jos käyttäjä ei ole kirjautuneena
   if (!user) {
     return (
       <div>
@@ -109,6 +135,7 @@ const App = () => {
     );
   }
 
+  // Näytetään blogit
   return (
     <div>
       <h2>blogs</h2>
@@ -128,29 +155,8 @@ const App = () => {
             key={blog.id}
             blog={blog}
             user={user}
-            updateBlog={(updatedBlog) => {
-              queryClient.setQueryData(['blogs'], (old) =>
-                old.map((b) => (b.id !== updatedBlog.id ? b : updatedBlog)),
-              );
-            }}
-            removeBlog={(removedBlog) => {
-              if (
-                !window.confirm(
-                  `Remove blog '${removedBlog.title}' by ${removedBlog.author}?`,
-                )
-              )
-                return;
-              blogService.remove(removedBlog.id).then(() => {
-                queryClient.setQueryData(['blogs'], (old) =>
-                  old.filter((b) => b.id !== removedBlog.id),
-                );
-                dispatch({
-                  type: 'SET',
-                  payload: `Deleted '${removedBlog.title}'`,
-                });
-                setTimeout(() => dispatch({ type: 'CLEAR' }), 5000);
-              });
-            }}
+            updateBlog={updateBlogLikes} // likes päivitys
+            removeBlog={removeBlog}
           />
         ))}
     </div>

@@ -1,9 +1,7 @@
-import { createContext, useReducer, useContext } from 'react';
+import { createContext, useContext, useReducer } from 'react';
 
-// Alkuperäinen tila
-const initialState = null;
+const NotificationContext = createContext();
 
-// Reducer notifikaatioille
 const notificationReducer = (state, action) => {
   switch (action.type) {
     case 'SET':
@@ -15,24 +13,20 @@ const notificationReducer = (state, action) => {
   }
 };
 
-// Luodaan context
-export const NotificationContext = createContext();
-
-// Provider-komponentti
 export const NotificationProvider = ({ children }) => {
-  const [notification, dispatch] = useReducer(
-    notificationReducer,
-    initialState,
-  );
+  const [notification, dispatch] = useReducer(notificationReducer, null);
+
+  const notify = (message, timeout = 5000) => {
+    dispatch({ type: 'SET', payload: message });
+    setTimeout(() => dispatch({ type: 'CLEAR' }), timeout);
+  };
 
   return (
-    <NotificationContext.Provider value={{ notification, dispatch }}>
+    <NotificationContext.Provider value={{ notification, notify }}>
       {children}
     </NotificationContext.Provider>
   );
 };
 
 // Hook helpottamaan contextin käyttöä
-export const useNotification = () => {
-  return useContext(NotificationContext);
-};
+export const useNotification = () => useContext(NotificationContext);
