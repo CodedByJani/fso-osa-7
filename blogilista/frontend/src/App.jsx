@@ -1,4 +1,3 @@
-// frontend/src/App.jsx
 import { useState, useEffect, useRef } from 'react';
 import Blog from './components/Blog';
 import BlogForm from './components/BlogForm';
@@ -6,55 +5,34 @@ import Togglable from './components/Togglable';
 import blogService from './services/blogs';
 import loginService from './services/login';
 import { useNotification } from './context/NotificationContext';
+import { useUser } from './context/UserContext';
 import Notification from './components/Notification';
 
 const App = () => {
   const [blogs, setBlogs] = useState([]);
-  const [user, setUser] = useState(null);
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
 
   const blogFormRef = useRef();
   const { notify, notification } = useNotification();
+  const { user, loginUser, logoutUser } = useUser();
 
-  // Hae blogit backendistä
   useEffect(() => {
     blogService.getAll().then((blogs) => setBlogs(blogs));
   }, []);
 
-  // Tarkista, onko käyttäjä kirjautuneena
-  useEffect(() => {
-    const loggedUserJSON = window.localStorage.getItem('loggedBlogUser');
-    if (loggedUserJSON) {
-      const user = JSON.parse(loggedUserJSON);
-      setUser(user);
-      blogService.setToken(user.token);
-    }
-  }, []);
-
-  // Kirjautuminen
   const handleLogin = async (event) => {
     event.preventDefault();
     try {
       const user = await loginService.login({ username, password });
-      window.localStorage.setItem('loggedBlogUser', JSON.stringify(user));
-      blogService.setToken(user.token);
-      setUser(user);
+      loginUser(user);
       setUsername('');
       setPassword('');
-    } catch (exception) {
+    } catch (error) {
       notify('wrong credentials', 5000);
     }
   };
 
-  // Kirjautuminen ulos
-  const handleLogout = () => {
-    setUser(null);
-    window.localStorage.removeItem('loggedBlogUser');
-    blogService.setToken(null);
-  };
-
-  // Lisää uusi blogi
   const addBlog = async (blogObject) => {
     try {
       const returnedBlog = await blogService.create(blogObject);
@@ -69,7 +47,6 @@ const App = () => {
     }
   };
 
-  // Poista blogi
   const removeBlog = async (blog) => {
     const ok = window.confirm(`Remove blog '${blog.title}' by ${blog.author}?`);
     if (!ok) return;
@@ -83,24 +60,18 @@ const App = () => {
     }
   };
 
-  // Päivitä blogin likes
   const updateBlogLikes = async (blog) => {
     const updatedBlog = {
       ...blog,
       likes: blog.likes + 1,
       user: blog.user.id || blog.user,
     };
-    try {
-      const returnedBlog = await blogService.update(blog.id, updatedBlog);
-      setBlogs(blogs.map((b) => (b.id !== returnedBlog.id ? b : returnedBlog)));
-      return returnedBlog; // <-- palauta blogi handleLike:lle
-    } catch (error) {
-      notify('Failed to like blog');
-      throw error; // <-- niin handleLike tietää että virhe tapahtui
-    }
+
+    const returnedBlog = await blogService.update(blog.id, updatedBlog);
+    setBlogs(blogs.map((b) => (b.id !== returnedBlog.id ? b : returnedBlog)));
+    return returnedBlog;
   };
 
-  // Jos käyttäjä ei ole kirjautuneena
   if (!user) {
     return (
       <div>
@@ -108,25 +79,18 @@ const App = () => {
         <Notification message={notification} />
         <form onSubmit={handleLogin}>
           <div>
-            <label htmlFor="username">username</label>
+            username
             <input
-              id="username"
-              type="text"
               value={username}
-              name="username"
               onChange={({ target }) => setUsername(target.value)}
-              required
             />
           </div>
           <div>
-            <label htmlFor="password">password</label>
+            password
             <input
-              id="password"
               type="password"
               value={password}
-              name="password"
               onChange={({ target }) => setPassword(target.value)}
-              required
             />
           </div>
           <button type="submit">login</button>
@@ -135,13 +99,13 @@ const App = () => {
     );
   }
 
-  // Näytetään blogit
   return (
     <div>
       <h2>blogs</h2>
       <Notification message={notification} />
+
       <p>
-        {user.name} logged in <button onClick={handleLogout}>logout</button>
+        {user.name} logged in <button onClick={logoutUser}>logout</button>
       </p>
 
       <Togglable buttonLabel="create new blog" ref={blogFormRef}>
@@ -155,7 +119,7 @@ const App = () => {
             key={blog.id}
             blog={blog}
             user={user}
-            updateBlog={updateBlogLikes} // likes päivitys
+            updateBlog={updateBlogLikes}
             removeBlog={removeBlog}
           />
         ))}
