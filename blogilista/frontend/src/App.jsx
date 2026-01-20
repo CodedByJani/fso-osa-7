@@ -1,7 +1,11 @@
+// frontend/src/App.jsx
 import { useState, useEffect, useRef } from 'react';
+import { Routes, Route, Link } from 'react-router-dom';
 import Blog from './components/Blog';
 import BlogForm from './components/BlogForm';
 import Togglable from './components/Togglable';
+import Users from './components/Users';
+import User from './components/User';
 import blogService from './services/blogs';
 import loginService from './services/login';
 import { useNotification } from './context/NotificationContext';
@@ -34,30 +38,18 @@ const App = () => {
   };
 
   const addBlog = async (blogObject) => {
-    try {
-      const returnedBlog = await blogService.create(blogObject);
-      setBlogs(blogs.concat(returnedBlog));
-      notify(
-        `a new blog '${returnedBlog.title}' by ${returnedBlog.author} added`,
-        5000,
-      );
-      blogFormRef.current.toggleVisibility();
-    } catch (error) {
-      notify('blog creation failed', 5000);
-    }
+    const returnedBlog = await blogService.create(blogObject);
+    setBlogs(blogs.concat(returnedBlog));
+    notify(
+      `a new blog '${returnedBlog.title}' by ${returnedBlog.author} added`,
+      5000,
+    );
+    blogFormRef.current.toggleVisibility();
   };
 
   const removeBlog = async (blog) => {
-    const ok = window.confirm(`Remove blog '${blog.title}' by ${blog.author}?`);
-    if (!ok) return;
-
-    try {
-      await blogService.remove(blog.id);
-      setBlogs(blogs.filter((b) => b.id !== blog.id));
-      notify(`Deleted '${blog.title}'`, 5000);
-    } catch (error) {
-      notify('Failed to delete blog', 5000);
-    }
+    await blogService.remove(blog.id);
+    setBlogs(blogs.filter((b) => b.id !== blog.id));
   };
 
   const updateBlogLikes = async (blog) => {
@@ -101,28 +93,42 @@ const App = () => {
 
   return (
     <div>
-      <h2>blogs</h2>
+      <div>
+        <Link to="/">blogs</Link> | <Link to="/users">users</Link>
+      </div>
+
       <Notification message={notification} />
 
       <p>
         {user.name} logged in <button onClick={logoutUser}>logout</button>
       </p>
 
-      <Togglable buttonLabel="create new blog" ref={blogFormRef}>
-        <BlogForm createBlog={addBlog} />
-      </Togglable>
+      <Routes>
+        <Route
+          path="/"
+          element={
+            <div>
+              <Togglable buttonLabel="create new blog" ref={blogFormRef}>
+                <BlogForm createBlog={addBlog} />
+              </Togglable>
 
-      {[...blogs]
-        .sort((a, b) => b.likes - a.likes)
-        .map((blog) => (
-          <Blog
-            key={blog.id}
-            blog={blog}
-            user={user}
-            updateBlog={updateBlogLikes}
-            removeBlog={removeBlog}
-          />
-        ))}
+              {[...blogs]
+                .sort((a, b) => b.likes - a.likes)
+                .map((blog) => (
+                  <Blog
+                    key={blog.id}
+                    blog={blog}
+                    user={user}
+                    updateBlog={updateBlogLikes}
+                    removeBlog={removeBlog}
+                  />
+                ))}
+            </div>
+          }
+        />
+        <Route path="/users" element={<Users />} />
+        <Route path="/users/:id" element={<User />} />
+      </Routes>
     </div>
   );
 };
