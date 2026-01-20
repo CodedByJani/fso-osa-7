@@ -108,6 +108,9 @@ const App = () => {
           path="/"
           element={
             <div>
+              <h2>blogs</h2>
+              <Notification message={notification} />
+
               <Togglable buttonLabel="create new blog" ref={blogFormRef}>
                 <BlogForm createBlog={addBlog} />
               </Togglable>
@@ -126,6 +129,7 @@ const App = () => {
             </div>
           }
         />
+
         <Route path="/users" element={<Users />} />
         <Route path="/users/:id" element={<User />} />
       </Routes>

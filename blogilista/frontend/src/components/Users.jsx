@@ -1,18 +1,16 @@
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import usersService from '../services/users';
+import userService from '../services/users';
 
 const Users = () => {
-  const result = useQuery({
+  const { data: users } = useQuery({
     queryKey: ['users'],
-    queryFn: usersService.getAll,
+    queryFn: userService.getAll,
   });
 
-  if (result.isLoading) {
-    return <div>loading users...</div>;
+  if (!users) {
+    return null;
   }
-
-  const users = result.data;
 
   return (
     <div>
@@ -21,8 +19,8 @@ const Users = () => {
       <table>
         <thead>
           <tr>
-            <th>User</th>
-            <th>Blogs created</th>
+            <th></th>
+            <th>blogs created</th>
           </tr>
         </thead>
         <tbody>
