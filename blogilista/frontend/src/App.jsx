@@ -1,8 +1,9 @@
 // frontend/src/App.jsx
 import { useState, useEffect, useRef } from 'react';
 import { Routes, Route, Link } from 'react-router-dom';
-import Blog from './components/Blog';
+import Blog from './components/Blog'; // listakomponentti (vain linkki)
 import BlogForm from './components/BlogForm';
+import BlogView from './components/BlogView'; // uusi komponentti yksittäiselle blogille
 import Togglable from './components/Togglable';
 import Users from './components/Users';
 import User from './components/User';
@@ -104,12 +105,12 @@ const App = () => {
       </p>
 
       <Routes>
+        {/* Blogien lista */}
         <Route
           path="/"
           element={
             <div>
               <h2>blogs</h2>
-              <Notification message={notification} />
 
               <Togglable buttonLabel="create new blog" ref={blogFormRef}>
                 <BlogForm createBlog={addBlog} />
@@ -118,20 +119,27 @@ const App = () => {
               {[...blogs]
                 .sort((a, b) => b.likes - a.likes)
                 .map((blog) => (
-                  <Blog
-                    key={blog.id}
-                    blog={blog}
-                    user={user}
-                    updateBlog={updateBlogLikes}
-                    removeBlog={removeBlog}
-                  />
+                  <Blog key={blog.id} blog={blog} />
                 ))}
             </div>
           }
         />
 
+        {/* Käyttäjät */}
         <Route path="/users" element={<Users />} />
         <Route path="/users/:id" element={<User />} />
+
+        {/* Yksittäinen blogi */}
+        <Route
+          path="/blogs/:id"
+          element={
+            <BlogView
+              updateBlog={updateBlogLikes}
+              removeBlog={removeBlog}
+              user={user}
+            />
+          }
+        />
       </Routes>
     </div>
   );
