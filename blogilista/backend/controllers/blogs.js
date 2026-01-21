@@ -6,11 +6,13 @@ const User = require('../models/user');
 
 const blogsRouter = express.Router();
 
+// Hae kaikki blogit
 blogsRouter.get('/', async (request, response) => {
   const blogs = await Blog.find({}).populate('user', { username: 1, name: 1 });
   response.json(blogs);
 });
 
+// Lisää uusi blogi
 blogsRouter.post('/', async (request, response) => {
   const body = request.body;
 
@@ -31,6 +33,7 @@ blogsRouter.post('/', async (request, response) => {
     url: body.url,
     likes: body.likes || 0,
     user: user._id,
+    comments: [], // oletuksena tyhjä lista
   });
 
   const savedBlog = await blog.save();
@@ -40,6 +43,7 @@ blogsRouter.post('/', async (request, response) => {
   response.status(201).json(savedBlog);
 });
 
+// Poista blogi
 blogsRouter.delete('/:id', async (request, response) => {
   const { id } = request.params;
   console.log('DELETE request received for ID:', id);
@@ -62,6 +66,7 @@ blogsRouter.delete('/:id', async (request, response) => {
   }
 });
 
+// Päivitä blogin likes
 blogsRouter.put('/:id', async (request, response) => {
   const id = request.params.id;
   const { likes } = request.body;
@@ -84,6 +89,31 @@ blogsRouter.put('/:id', async (request, response) => {
     }
   } catch (error) {
     console.error('Error updating blog:', error.message);
+    response.status(500).json({ error: 'internal server error' });
+  }
+});
+
+// Lisää kommentti blogiin
+blogsRouter.post('/:id/comments', async (request, response) => {
+  const { comment } = request.body;
+  const { id } = request.params;
+
+  if (!comment || comment.trim() === '') {
+    return response.status(400).json({ error: 'comment is required' });
+  }
+
+  try {
+    const blog = await Blog.findById(id);
+    if (!blog) {
+      return response.status(404).json({ error: 'blog not found' });
+    }
+
+    blog.comments = blog.comments.concat(comment);
+    const updatedBlog = await blog.save();
+
+    response.status(201).json(updatedBlog);
+  } catch (error) {
+    console.error('Error adding comment:', error.message);
     response.status(500).json({ error: 'internal server error' });
   }
 });

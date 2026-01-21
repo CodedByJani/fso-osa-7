@@ -1,9 +1,9 @@
 // frontend/src/App.jsx
 import { useState, useEffect, useRef } from 'react';
 import { Routes, Route, Link } from 'react-router-dom';
-import Blog from './components/Blog'; // listakomponentti (vain linkki)
+import Blog from './components/Blog';
 import BlogForm from './components/BlogForm';
-import BlogView from './components/BlogView'; // uusi komponentti yksittäiselle blogille
+import BlogView from './components/BlogView';
 import Togglable from './components/Togglable';
 import Users from './components/Users';
 import User from './components/User';
@@ -39,13 +39,17 @@ const App = () => {
   };
 
   const addBlog = async (blogObject) => {
-    const returnedBlog = await blogService.create(blogObject);
-    setBlogs(blogs.concat(returnedBlog));
-    notify(
-      `a new blog '${returnedBlog.title}' by ${returnedBlog.author} added`,
-      5000,
-    );
-    blogFormRef.current.toggleVisibility();
+    try {
+      const returnedBlog = await blogService.create(blogObject);
+      setBlogs(blogs.concat(returnedBlog));
+      notify(
+        `a new blog '${returnedBlog.title}' by ${returnedBlog.author} added`,
+        5000,
+      );
+      blogFormRef.current.toggleVisibility();
+    } catch (error) {
+      notify('blog creation failed', 5000);
+    }
   };
 
   const removeBlog = async (blog) => {

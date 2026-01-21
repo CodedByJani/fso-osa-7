@@ -7,9 +7,9 @@ import { useNotification } from '../context/NotificationContext';
 const BlogView = ({ updateBlog, removeBlog, user }) => {
   const { id } = useParams();
   const [blog, setBlog] = useState(null);
+  const [newComment, setNewComment] = useState('');
   const { notify } = useNotification();
 
-  // Hae blogi joko palvelimelta
   useEffect(() => {
     const fetchBlog = async () => {
       try {
@@ -24,13 +24,13 @@ const BlogView = ({ updateBlog, removeBlog, user }) => {
   }, [id, notify]);
 
   if (!blog) {
-    return null; // Vältetään virheilmoitus
+    return null;
   }
 
   const handleLike = async () => {
     try {
       await updateBlog(blog);
-      setBlog({ ...blog, likes: blog.likes + 1 }); // päivitys UI:hin
+      setBlog({ ...blog, likes: blog.likes + 1 });
     } catch (error) {
       notify('Failed to like blog', 5000);
     }
@@ -48,6 +48,22 @@ const BlogView = ({ updateBlog, removeBlog, user }) => {
     }
   };
 
+  const handleAddComment = async (event) => {
+    event.preventDefault();
+    if (!newComment.trim()) return;
+
+    try {
+      const updatedBlog = await blogService.addComment(blog.id, {
+        comment: newComment,
+      });
+      setBlog(updatedBlog);
+      setNewComment('');
+      notify('Comment added', 5000);
+    } catch (error) {
+      notify('Failed to add comment', 5000);
+    }
+  };
+
   return (
     <div>
       <h2>{blog.title}</h2>
@@ -62,6 +78,24 @@ const BlogView = ({ updateBlog, removeBlog, user }) => {
       {user.username === blog.user?.username && (
         <button onClick={handleRemove}>remove</button>
       )}
+
+      <h3>Comments</h3>
+      <ul>
+        {blog.comments?.map((c, index) => (
+          <li key={index}>{c}</li>
+        ))}
+      </ul>
+
+      <form onSubmit={handleAddComment}>
+        <input
+          type="text"
+          value={newComment}
+          onChange={({ target }) => setNewComment(target.value)}
+          placeholder="Add a comment"
+          required
+        />
+        <button type="submit">Add Comment</button>
+      </form>
     </div>
   );
 };

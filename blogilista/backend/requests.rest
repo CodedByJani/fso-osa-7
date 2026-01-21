@@ -45,3 +45,11 @@ Content-Type: application/json
   "url": "http://example.com/blogi",
   "likes": 10
 }
+
+### Lisää kommentti blogiin
+POST http://localhost:3003/api/blogs/688336b025e4ae67268239e7/comments
+Content-Type: application/json
+
+{
+  "comment": "test comment"
+}
