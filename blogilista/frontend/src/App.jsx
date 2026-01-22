@@ -98,15 +98,20 @@ const App = () => {
 
   return (
     <div>
-      <div>
-        <Link to="/">blogs</Link> | <Link to="/users">users</Link>
-      </div>
+      {/* --- Navigointipalkki --- */}
+      <nav>
+        <div className="links">
+          <Link to="/">Blogs</Link>
+          <Link to="/users">Users</Link>
+        </div>
+
+        <div className="user-info">
+          <span>{user.name} logged in</span>
+          <button onClick={logoutUser}>logout</button>
+        </div>
+      </nav>
 
       <Notification message={notification} />
-
-      <p>
-        {user.name} logged in <button onClick={logoutUser}>logout</button>
-      </p>
 
       <Routes>
         {/* Blogien lista */}
@@ -114,7 +119,7 @@ const App = () => {
           path="/"
           element={
             <div>
-              <h2>blogs</h2>
+              <h2>Blogs</h2>
 
               <Togglable buttonLabel="create new blog" ref={blogFormRef}>
                 <BlogForm createBlog={addBlog} />

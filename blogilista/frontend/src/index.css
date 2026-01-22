@@ -1,0 +1,226 @@
+/* index.css */
+
+/* --- Yleiset tyylit --- */
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background-color: #f0f4f8;
+  margin: 0;
+  padding: 0;
+  color: #333;
+}
+
+h2 {
+  color: #2c3e50;
+}
+
+/* --- Notifikaatiot --- */
+.notification {
+  border: 1px solid #ccc;
+  padding: 10px 15px;
+  margin-bottom: 15px;
+  border-radius: 8px;
+  font-weight: bold;
+  max-width: 500px;
+}
+
+.notification.success {
+  background-color: #d4edda;
+  border-color: #28a745;
+  color: #155724;
+}
+
+.notification.error {
+  background-color: #f8d7da;
+  border-color: #dc3545;
+  color: #721c24;
+}
+
+/* --- Blog-komponentti (lista) --- */
+.blog {
+  padding: 15px 20px;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  background-color: #ffffff;
+  margin-bottom: 10px;
+  transition:
+    box-shadow 0.3s,
+    transform 0.2s;
+}
+
+.blog:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  transform: translateY(-2px);
+}
+
+/* --- Linkit --- */
+a {
+  text-decoration: none;
+  color: #2980b9;
+  font-weight: 500;
+}
+
+a:hover {
+  text-decoration: underline;
+  color: #1c5980;
+}
+
+/* --- BlogView-komponentti (yksittäinen blogi) --- */
+.blog-view {
+  padding: 25px;
+  border-radius: 12px;
+  background-color: #ffffff;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+  max-width: 700px;
+  margin-top: 20px;
+}
+
+.blog-view h2 {
+  margin-top: 0;
+  margin-bottom: 10px;
+}
+
+/* Kommentit */
+.comments {
+  margin-top: 20px;
+  padding-left: 20px;
+}
+
+.comments li {
+  margin-bottom: 6px;
+  list-style-type: disc;
+}
+
+/* --- Käyttäjät --- */
+.users,
+.user {
+  padding: 20px;
+  border-radius: 12px;
+  background-color: #ffffff;
+  margin-top: 15px;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+}
+
+.users h2,
+.user h2 {
+  margin-top: 0;
+  margin-bottom: 15px;
+}
+
+.user ul {
+  list-style-type: none;
+  padding-left: 0;
+}
+
+.user ul li {
+  margin-bottom: 8px;
+}
+
+/* --- Lomakkeet --- */
+form {
+  margin-bottom: 25px;
+}
+
+form div {
+  margin-bottom: 12px;
+}
+
+input,
+button {
+  padding: 8px 10px;
+  font-size: 15px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+}
+
+input:focus {
+  outline: none;
+  border-color: #2980b9;
+  box-shadow: 0 0 5px rgba(41, 128, 185, 0.3);
+}
+
+button {
+  cursor: pointer;
+  background-color: #3498db;
+  color: #fff;
+  border: none;
+  transition: background-color 0.2s;
+}
+
+button:hover {
+  background-color: #217dbb;
+}
+
+/* --- Navigointimenu --- */
+nav {
+  background-color: #2c3e50;
+  padding: 12px 20px;
+  margin-bottom: 20px;
+  border-radius: 0 0 10px 10px;
+}
+
+nav a {
+  color: #ecf0f1;
+  font-weight: 500;
+  margin-right: 15px;
+}
+
+nav a:hover {
+  color: #bdc3c7;
+}
+
+/* --- Layout parannukset --- */
+.container {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+p {
+  margin: 5px 0;
+}
+
+/* --- Navigointimenu & Logged-in bar --- */
+nav {
+  background-color: #2c3e50;
+  padding: 12px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  border-radius: 0 0 10px 10px;
+}
+
+nav .links a {
+  color: #ecf0f1;
+  font-weight: 500;
+  margin-right: 15px;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+nav .links a:hover {
+  color: #bdc3c7;
+}
+
+nav .user-info {
+  color: #ecf0f1;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+nav .user-info button {
+  padding: 6px 12px;
+  font-size: 14px;
+  border-radius: 6px;
+  border: none;
+  background-color: #e74c3c;
+  color: white;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+nav .user-info button:hover {
+  background-color: #c0392b;
+}
